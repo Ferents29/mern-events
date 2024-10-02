@@ -30,7 +30,7 @@ function App() {
         if (!isEmpty(initialEvent)){
             return 'Update event'
         }
-        return 'Add event!!!! @@@'
+        return 'Add event'
     }
 
     return (
