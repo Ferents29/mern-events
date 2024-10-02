@@ -1,65 +1,76 @@
-import React from 'react';
+import React, {FC, useCallback} from 'react';
 import {Button, DatePicker, Form, Input, Modal} from "antd";
-import {addEvent, updateEvent} from "../API server/event";
-import moment from "moment";
+import {addEvent, updateEvent} from "../store/reducers/actionCreators";
+import {useAppDispatch} from "../hooks/redux";
+import {IEvent} from "../models/IEvents";
+import isEmpty from 'lodash/isEmpty';
 
-const AddEventModal = ({ dispatch, isModalOpen, setIsModalOpen, initialEvent, setInitialEvent }) => {
-    const showModal = () => {
-        setIsModalOpen(true);
+interface AddEventModalFormProps {
+    isModalOpen: boolean;
+    initialEvent: IEvent;
+    title: string;
+    setIsModalOpen: (isOpen: boolean) => void;
+    handleOk: () => void;
+    setInitialEvent: (event: IEvent) => void;
+}
+
+const AddEventModalForm:FC<AddEventModalFormProps> = ({
+        isModalOpen,
+        handleOk,
+        initialEvent,
+        title,
+        setIsModalOpen,
+        setInitialEvent,
+    }) => {
+    const dispatch = useAppDispatch();
+    const [form] = Form.useForm<IEvent>();
+console.log(initialEvent);
+    const onFinish = (values: IEvent) => {
+        if (!isEmpty(initialEvent)){
+            const newEvent: IEvent = {...values, _id: initialEvent._id}
+            dispatch(updateEvent(newEvent))
+        }else {
+            dispatch(addEvent(values));
+        }
+        handleCancel();
     };
-    const handleOk = () => {
-        setIsModalOpen(false);
-        setInitialEvent({});
-    };
+
     const handleCancel = () => {
         setIsModalOpen(false);
-        setInitialEvent({});
+        setInitialEvent({} as IEvent);
+        form.resetFields();
     };
-    const onFinish = values => {
-        if ((initialEvent !== undefined)){
-            const newValues = {
-                ...values,
-                _id: initialEvent._id,
-            };
-            dispatch(updateEvent(newValues));
-            handleOk();
-        }
-        dispatch(addEvent(values));
-        handleOk();
-    };
+
     return (
         <>
-            <Button type="primary" onClick={showModal}>
-                Add event
-            </Button>
             <Modal
-                title="Add event"
+                title={title}
                 open={isModalOpen}
-                footer={false}
                 onOk={handleOk}
                 onCancel={handleCancel}
+                footer={false}
             >
                 <Form
-                    preserve={false}
-                    name="event"
+                    form={form}
+                    name="Add event"
                     labelCol={{
-                        span: 20,
+                        span: 8,
                     }}
                     wrapperCol={{
-                        span: 20,
+                        span: 16,
                     }}
                     style={{
                         maxWidth: 600,
                     }}
                     initialValues={{
-                        dateEvent: moment(initialEvent?.date),
-                        title: initialEvent?.title,
-                        description: initialEvent?.description,
-                        organizer: initialEvent?.organizer,
+                        title: initialEvent.title,
+                        description: initialEvent.description,
+                        dateEvent: initialEvent.dateEvent,
+                        organizer: initialEvent.organizer,
                     }}
                     onFinish={onFinish}
+                    preserve={false}
                     autoComplete="off"
-                    layout="vertical"
                 >
                     <Form.Item
                         label="Title"
@@ -67,15 +78,15 @@ const AddEventModal = ({ dispatch, isModalOpen, setIsModalOpen, initialEvent, se
                         rules={[
                             {
                                 required: true,
-                                message: 'Please input your title!',
+                                message: 'Please input your Title!',
                             },
                         ]}
                     >
-                        <Input/>
+                        <Input />
                     </Form.Item>
 
                     <Form.Item
-                        label="Description"
+                        label="Sescription"
                         name="description"
                         rules={[
                             {
@@ -86,30 +97,33 @@ const AddEventModal = ({ dispatch, isModalOpen, setIsModalOpen, initialEvent, se
                     >
                         <Input.TextArea />
                     </Form.Item>
+
+                    <Form.Item
+                        label="Date event"
+                        name="dateEvent"
+                        rules={[
+                            {
+                                required: true,
+                                message: 'Please input your date event!',
+                            },
+                        ]}
+                    >
+                        <DatePicker />
+                    </Form.Item>
+
                     <Form.Item
                         label="Organizer"
                         name="organizer"
                         rules={[
                             {
                                 required: true,
-                                message: 'Please input your organizer!',
+                                message: 'Please input your date organizer!',
                             },
                         ]}
                     >
                         <Input />
                     </Form.Item>
-                    <Form.Item
-                        label="Date of event"
-                        name="dateEvent"
-                        rules={[
-                            {
-                                required: true,
-                                message: 'Please input your date of event!',
-                            },
-                        ]}
-                    >
-                        <DatePicker/>
-                    </Form.Item>
+
                     <Form.Item
                         wrapperCol={{
                             offset: 8,
@@ -126,4 +140,4 @@ const AddEventModal = ({ dispatch, isModalOpen, setIsModalOpen, initialEvent, se
     );
 };
 
-export default AddEventModal;
+export default AddEventModalForm;
